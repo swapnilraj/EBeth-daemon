@@ -1,5 +1,5 @@
 import { daemon } from './daemon';
-import later from 'later';
+import * as later from 'later';
 import {everyDay} from './util/constants';
 
 later.date.UTC();
