@@ -15,5 +15,11 @@ export const deploy = (fixture) => {
 };
 
 export const startMatch = (fid) => {
+  console.log(`Starting match id: ${fid}`);
   console.log(fid);
 };
+
+export const stopMatch = (fid) => {
+  console.log(`Deleting ${fid} from alreadyDeployed`);
+  delete alreadyDeployed[fid];
+}
