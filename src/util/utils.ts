@@ -7,6 +7,6 @@ export const toScheduleFormat = (date: Date) => {
       D: [ date.getDate() ],
       M: [ date.getMonth() + 1 ],
       Y: [ date.getFullYear() ],
-    }]
+    }],
   };
 }
