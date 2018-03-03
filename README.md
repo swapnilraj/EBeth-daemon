@@ -8,6 +8,11 @@ Daemon which runs and deploys smart contracts for EBeth betting services and int
 * npm
 
 ## How to run?
+Before running export the location of the binary compiled version of your smart contract, like:
+```
+  export EBETH_CONTRACT=~/foo
+```
+
 Initialise dependecies
 ```
   yarn install
