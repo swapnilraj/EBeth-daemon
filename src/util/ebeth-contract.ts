@@ -1,5 +1,5 @@
 import * as later from 'later';
-import { toScheduleFormat } from './utils';
+import { toScheduleFormat, minutesToMilliSeconds } from './utils';
 let alreadyDeployed = {};
 
 export const deploy = fixture => {
@@ -7,10 +7,15 @@ export const deploy = fixture => {
     alreadyDeployed = { ...alreadyDeployed, [fixture.fid]: true };
     console.log(fixture);
 
-    const startTime = toScheduleFormat(new Date(fixture['ko_f']));
+    const startTime = new Date(fixture['ko_f']);
     later.setTimeout(() => {
       startMatch(fixture.fid);
-    }, startTime);
+    }, toScheduleFormat(startTime));
+
+    const stopTime = new Date(startTime.getTime() + minutesToMilliSeconds(100));
+    later.setTimeout(() => {
+      stopMatch(fixture.fid);
+    }, toScheduleFormat(stopTime));
   }
   // Currently only logs the fixture later it will deploy the contract
   // if not already deployed
