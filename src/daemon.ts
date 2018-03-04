@@ -7,7 +7,5 @@ export const daemon = async () => {
   currentFixtures = await getFixtures().then(r => r);
   console.log(currentFixtures);
 
-  currentFixtures.forEach(fixture => {
-    deploy(fixture);
-  });
+  currentFixtures.forEach(deploy);
 };
