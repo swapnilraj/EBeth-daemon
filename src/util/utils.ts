@@ -1,3 +1,5 @@
+import { MILLISECONDS_IN_MINUTES } from './constants';
+
 export const toScheduleFormat = (date: Date) => {
   return {
     schedules: [
@@ -12,3 +14,5 @@ export const toScheduleFormat = (date: Date) => {
     ],
   };
 };
+
+export const minutesToMilliSeconds = (minutes: number) => minutes * MILLISECONDS_IN_MINUTES;

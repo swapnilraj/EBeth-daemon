@@ -6,3 +6,5 @@ export const everyDay = later.parse
   .time();
 
 export const CONTRACT_LOCATION = process.env['EBETH_CONTRACT'] || './test';
+
+export const MILLISECONDS_IN_MINUTES = 60000;
