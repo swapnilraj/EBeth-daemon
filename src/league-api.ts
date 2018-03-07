@@ -9,6 +9,6 @@ export const getFixtures = async (): Promise<any> => {
   };
 
   return axios(requestOpt)
-    .then(res => res.data.scores)
+    .then(res => res.data.nextgw)
     .catch(err => err);
 };
