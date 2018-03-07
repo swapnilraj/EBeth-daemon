@@ -18,7 +18,6 @@ managerContract.options.address = managerAddress;
 let alreadyDeployed = {};
 
 export const deploy = async fixture => {
-  console.log(bettingContractJSON['abi']);
   if (!(fixture.fid in alreadyDeployed)) {
     alreadyDeployed = { ...alreadyDeployed, [fixture.fid]: true };
     const startTime = new Date(fixture['ko_f']);
@@ -34,19 +33,20 @@ export const deploy = async fixture => {
         gasPrice: '2000000000',
       })
       .then(function(newContractInstance) {
-        console.log(`Created match id: ${fixture.fid}`);
         fixture['address'] = newContractInstance.options.address;
         managerContract.methods
           .addEvent(fixture.address)
           .send({ from: accounts[0] })
           .then(function(receipt) {
-            console.log(receipt.transactionHash);
+            console.log(`Created match id: ${fixture.fid} Tx: ${receipt.transactionHash}`);
           })
           .catch(function(error) {
+            delete alreadyDeployed[fixture.fid];
             console.log('Sending info to manager was cancelled due to error: ' + error);
           });
       })
       .catch(function(error) {
+        delete alreadyDeployed[fixture.fid];
         console.log('Deplying contract was cancelled due to error: ' + error);
       });
 
