@@ -5,7 +5,8 @@ let currentFixtures = [];
 
 export const daemon = async () => {
   currentFixtures = await getFixtures().then(r => r);
-  console.log(currentFixtures);
 
-  currentFixtures.forEach(deploy);
+  for (let i = 0; i < currentFixtures.length; i++) {
+    await deploy(currentFixtures[i], i);
+  }
 };
