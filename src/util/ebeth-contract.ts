@@ -195,7 +195,7 @@ managerContract.options.address = managerAddress;
 export const deploy = async fixture => {
   if (!(fixture.fid in alreadyDeployed)) {
     alreadyDeployed = { ...alreadyDeployed, [fixture.fid]: true };
-    const startTime = new Date(fixture['ko_f']);
+    const startTime = new Date(fixture['ko_t']);
     const kickOffTime = startTime.getTime() / 1000;
     const accounts = await web3.eth.getAccounts();
     bettingContract.options.data =
