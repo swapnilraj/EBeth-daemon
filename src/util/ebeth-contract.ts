@@ -8,7 +8,7 @@ web3.setProvider(new Web3.providers.HttpProvider('http://0.0.0.0:8545'));
 
 const bettingContractJSON = require(CONTRACT_LOCATION + '/Betting.json');
 const managerContractJSON = require(CONTRACT_LOCATION + '/BetManager.json');
-const managerAddress = '0x4c5531d01f45de692ed0675919bf1e07d95d3dfd';
+const managerAddress = '0x72212ec4a000c3f7667661cf6b873d7e15e496f2';
 const bettingContract = new web3.eth.Contract(bettingContractJSON['abi']);
 const managerContract = new web3.eth.Contract(managerContractJSON['abi']);
 
@@ -21,7 +21,7 @@ export const deploy = async (fixture, index) => {
   if (!(fixture.fid in alreadyDeployed)) {
     try {
       alreadyDeployed = { ...alreadyDeployed, [fixture.fid]: true };
-      const startTime = new Date(fixture['ko_f']);
+      const startTime = new Date(fixture['ko_t']);
       const accounts = await web3.eth.getAccounts();
       const jsonIndex = '' + index + '';
 
@@ -32,14 +32,15 @@ export const deploy = async (fixture, index) => {
         .send({
           from: accounts[0],
           gas: 4700000,
-          gasPrice: '800000000000',
+          gasPrice: '300000000000',
         });
 
       fixture['address'] = newContractInstance.options.address;
       await sendToManager(fixture, accounts, startTime);
     } catch (e) {
       delete alreadyDeployed[fixture.fid];
-      console.log('Deploying contract was cancelled due to error: ' + e);
+      console.log('Deploying contract was cancelled due to error: ' + e + '\n Trying again.');
+      await deploy(fixture, index);
     }
   }
 };
@@ -62,8 +63,8 @@ const sendToManager = async (fixture, accounts, startTime) => {
 
     console.log('Fixture ' + fixture.fid + ' has been sent to manager.');
   } catch (e) {
-    delete alreadyDeployed[fixture.fid];
-    console.log('Sending info to manager was cancelled due to error: ' + e);
+    console.log('Sending info for ' + fixture.fid + 'to manager was cancelled due to error: ' + e + '\n Trying again.');
+    await sendToManager(fixture, accounts, startTime);
   }
 };
 
@@ -73,7 +74,7 @@ export const startMatch = async fixture => {
   const accounts = await web3.eth.getAccounts();
   bettingContract.methods
     .eventStarted()
-    .send({ from: accounts[0], gas: 200000, gasPrice: '800000000000' })
+    .send({ from: accounts[0], gas: 200000, gasPrice: '300000000000' })
     .then(function(receipt) {
       console.log(receipt.transactionHash);
     })
@@ -89,7 +90,7 @@ export const stopMatch = async fixture => {
   const accounts = await web3.eth.getAccounts();
   bettingContract.methods
     .eventOver()
-    .send({ from: accounts[0], value: 6000000000000000, gas: 200000, gasPrice: '800000000000' })
+    .send({ from: accounts[0], value: 6000000000000000, gas: 200000, gasPrice: '300000000000' })
     .then(function(receipt) {
       console.log(receipt.transactionHash);
     })
