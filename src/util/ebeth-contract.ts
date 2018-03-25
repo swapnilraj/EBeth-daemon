@@ -12,7 +12,7 @@ const managerContractJSON = require(CONTRACT_LOCATION + '/BetManager.json');
 const bettingContract = new web3.eth.Contract(bettingContractJSON['abi']);
 const managerContract = new web3.eth.Contract(managerContractJSON['abi']);
 
-const managerAddress = '0xdbc746bfec04d2641a6edeef5233eb9628303b39';
+const managerAddress = '0x8ab07c51028d09d564fb4a55e537c5983373eea1';
 
 bettingContract.options.data = bettingContractJSON['bytecode'];
 managerContract.options.address = managerAddress;
@@ -35,16 +35,24 @@ export const deploy = async (fixture: any, index: number) => {
 
       const newContractInstance = await bettingContract
         .deploy({
-          arguments: [fixture['tm_h'], 'Draw', fixture['tm_a'], startTime.getTime(), jsonIndex],
+          arguments: [
+            fixture['tm_h'],
+            'Draw',
+            fixture['tm_a'],
+            startTime.getTime(),
+            jsonIndex,
+            fixture.fid,
+            managerAddress,
+          ],
         })
         .send({
           from: accounts[0],
-          gas: 4700000,
+          gas: '4700000',
           gasPrice: '300000000000',
         });
 
       fixture['address'] = newContractInstance.options.address;
-      await sendToManager(fixture, accounts, startTime);
+      //await sendToManager(fixture, accounts, startTime);
 
       later.setTimeout(() => {
         startMatch(fixture);
@@ -55,7 +63,7 @@ export const deploy = async (fixture: any, index: number) => {
       const sch = later.parse.recur.every(2).minute();
 
       later.setTimeout(() => {
-        let t = later.setInterval(() => {
+        const t = later.setInterval(() => {
           isFinished(index).then(res => {
             if (res === true) {
               stopMatch(fixture);
@@ -65,9 +73,7 @@ export const deploy = async (fixture: any, index: number) => {
         }, sch);
       }, toScheduleFormat(stopTime));
     } catch (e) {
-      delete alreadyDeployed[fixture.fid];
-      console.log('Deploying contract was cancelled due to error: ' + e + '\n Trying again.');
-      await deploy(fixture, index);
+      console.log('Deploying contract was cancelled due to error: ' + e + '\n');
     }
   }
 };
@@ -98,7 +104,7 @@ const startMatch = async fixture => {
   const accounts = await web3.eth.getAccounts();
   bettingContract.methods
     .eventStarted()
-    .send({ from: accounts[0], gas: 200000, gasPrice: '300000000000' })
+    .send({ from: accounts[0], gas: '200000', gasPrice: '300000000000' })
     .then(function(receipt) {
       console.log(receipt.transactionHash);
     })
@@ -118,7 +124,7 @@ const stopMatch = async fixture => {
   const accounts = await web3.eth.getAccounts();
   bettingContract.methods
     .eventOver()
-    .send({ from: accounts[0], value: 12000000000000000, gas: 200000, gasPrice: '300000000000' })
+    .send({ from: accounts[0], value: '12000000000000000', gas: '200000', gasPrice: '300000000000' })
     .then(function(receipt) {
       console.log(receipt.transactionHash);
     })
