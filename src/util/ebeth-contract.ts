@@ -20,6 +20,44 @@ managerContract.options.address = managerAddress;
 let alreadyDeployed = {};
 
 /**
+ * Resumes the startMatch and stopMatch timers for matches that are already
+ * managed by the BetManager.
+ */
+export const resumeTimers = async () => {
+  const accounts = await web3.eth.getAccounts();
+  const betEvents = await _getAvailableBets(accounts[0]);
+  for (const betEvent of betEvents) {
+    bettingContract.options.address = betEvent;
+    const fid = await bettingContract.methods.fid().call({ from: accounts[0] });
+    alreadyDeployed = { ...alreadyDeployed, [fid]: true };
+    const kickOff = await bettingContract.methods.kickOffTime().call({ from: accounts[0] });
+    const startTime = new Date(parseInt(kickOff, 10));
+    const index = await bettingContract.methods.jsonIndex().call({ from: accounts[0] });
+
+    const fixture = { fid: fid, address: betEvent };
+
+    later.setTimeout(() => {
+      startMatch(fixture);
+    }, toScheduleFormat(startTime));
+
+    const stopTime = new Date(startTime.getTime() + minutesToMilliSeconds(105));
+
+    const sch = later.parse.recur.every(2).minute();
+
+    later.setTimeout(() => {
+      const t = later.setInterval(() => {
+        isFinished(index).then(res => {
+          if (res === true) {
+            stopMatch(fixture);
+            t.clear();
+          }
+        });
+      }, sch);
+    }, toScheduleFormat(stopTime));
+  }
+};
+
+/**
  * Deploys a fixture as a smart contract and starts timers to manage the state of
  * the contract.
  * @param fixture An object containing information about the fixture.
@@ -115,4 +153,46 @@ const stopMatch = async fixture => {
       console.log(error);
     });
   delete alreadyDeployed[fixture.fid];
+};
+
+/**
+ * Returns the amount of BetEvents managed by the smart contract.
+ * @param account the address of the user account.
+ * @returns amount of BetEvents managed by the smart contract.
+ */
+const _getAmountOfBets = async (account: string): Promise<number> => {
+  const length = await managerContract.methods.length().call({ from: account });
+  return length;
+};
+
+/**
+ * returns an array of addresses to Betting contracts managed by the smart contract.
+ * @param account Address of the user account.
+ * @returns Array of addresses of Betting contracts.
+ */
+const _getAllBets = async (account: string): Promise<string[]> => {
+  const length = await _getAmountOfBets(account);
+  const addresses: string[] = [];
+  for (let i = 0; i < length; i++) {
+    addresses[i] = await managerContract.methods.betEvents(i).call({ from: account });
+  }
+  return addresses;
+};
+
+/**
+ * Returns an array of bets for which the event is not over.
+ * @param account Address of the user account.
+ * @returns Array of bets for which the event is not over.
+ */
+const _getAvailableBets = async (account: string): Promise<string[]> => {
+  const availableBets: string[] = [];
+  const betEvents = await _getAllBets(account);
+  for (const betEvent of betEvents) {
+    bettingContract.options.address = betEvent;
+    const state = await bettingContract.methods.state().call({ from: account });
+    if (state < 2) {
+      availableBets.push(betEvent);
+    }
+  }
+  return availableBets;
 };
