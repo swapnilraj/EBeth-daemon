@@ -52,7 +52,6 @@ export const deploy = async (fixture: any, index: number) => {
         });
 
       fixture['address'] = newContractInstance.options.address;
-      //await sendToManager(fixture, accounts, startTime);
 
       later.setTimeout(() => {
         startMatch(fixture);
@@ -73,24 +72,8 @@ export const deploy = async (fixture: any, index: number) => {
         }, sch);
       }, toScheduleFormat(stopTime));
     } catch (e) {
-      console.log('Deploying contract was cancelled due to error: ' + e + '\n');
+      console.log(`Deploying contract was cancelled due to error: ${e} +\n`);
     }
-  }
-};
-
-/**
- * Send the address of the Betting smart contract to the BetManager smart contract.
- * @param fixture An object containing information about the fixture.
- * @param accounts An array of Ethereum accounts given by web3.
- * @param startTime The Date object for when the match is meant to start.
- */
-const sendToManager = async (fixture, accounts, startTime) => {
-  try {
-    const receipt = await managerContract.methods.addEvent(fixture.address).send({ from: accounts[0] });
-    console.log(`Created match id: ${fixture.fid} Tx: ${receipt.transactionHash}`);
-  } catch (e) {
-    console.log('Sending info for ' + fixture.fid + 'to manager was cancelled due to error: ' + e + '\n Trying again.');
-    await sendToManager(fixture, accounts, startTime);
   }
 };
 
@@ -111,7 +94,7 @@ const startMatch = async fixture => {
     .catch(function(error) {
       console.log(error);
     });
-  console.log('Match started: ' + fixture.fid);
+  console.log(`Match started: ${fixture.fid}`);
 };
 
 /**
