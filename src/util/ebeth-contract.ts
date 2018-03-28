@@ -12,7 +12,7 @@ const managerContractJSON = require(CONTRACT_LOCATION + '/BetManager.json');
 const bettingContract = new web3.eth.Contract(bettingContractJSON['abi']);
 const managerContract = new web3.eth.Contract(managerContractJSON['abi']);
 
-const managerAddress = '0x8ab07c51028d09d564fb4a55e537c5983373eea1';
+const managerAddress = '0x19ab6a9e79288f22e3a8536684991f0c2656d3fe';
 
 bettingContract.options.data = bettingContractJSON['bytecode'];
 managerContract.options.address = managerAddress;
@@ -24,37 +24,42 @@ let alreadyDeployed = {};
  * managed by the BetManager.
  */
 export const resumeTimers = async () => {
-  const accounts = await web3.eth.getAccounts();
-  const betEvents = await _getAvailableBets(accounts[0]);
-  for (const betEvent of betEvents) {
-    bettingContract.options.address = betEvent;
-    const fid = await bettingContract.methods.fid().call({ from: accounts[0] });
-    alreadyDeployed = { ...alreadyDeployed, [fid]: true };
-    const kickOff = await bettingContract.methods.kickOffTime().call({ from: accounts[0] });
-    const startTime = new Date(parseInt(kickOff, 10));
-    const index = await bettingContract.methods.jsonIndex().call({ from: accounts[0] });
+  try {
+    const accounts = await web3.eth.getAccounts();
+    const betEvents = await _getAvailableBets(accounts[0]);
+    for (const betEvent of betEvents) {
+      bettingContract.options.address = betEvent;
+      const fid = await bettingContract.methods.fid().call({ from: accounts[0] });
+      alreadyDeployed = { ...alreadyDeployed, [fid]: true };
+      const kickOff = await bettingContract.methods.kickOffTime().call({ from: accounts[0] });
+      const startTime = new Date(parseInt(kickOff, 10));
+      const index = await bettingContract.methods.jsonIndex().call({ from: accounts[0] });
 
-    const fixture = { fid: fid, address: betEvent };
+      const fixture = { fid: fid, address: betEvent };
 
-    later.setTimeout(() => {
-      startMatch(fixture);
-    }, toScheduleFormat(startTime));
+      later.setTimeout(() => {
+        startMatch(fixture);
+      }, toScheduleFormat(startTime));
 
-    const stopTime = new Date(startTime.getTime() + minutesToMilliSeconds(105));
+      const stopTime = new Date(startTime.getTime() + minutesToMilliSeconds(105));
 
-    const sch = later.parse.recur.every(2).minute();
+      const sch = later.parse
+        .recur()
+        .every(2)
+        .minute();
 
-    later.setTimeout(() => {
-      const t = later.setInterval(() => {
-        isFinished(index).then(res => {
-          if (res === true) {
-            stopMatch(fixture);
-            t.clear();
-          }
-        });
-      }, sch);
-    }, toScheduleFormat(stopTime));
-  }
+      later.setTimeout(() => {
+        const t = later.setInterval(() => {
+          isFinished(index).then(res => {
+            if (res === true) {
+              stopMatch(fixture);
+              t.clear();
+            }
+          });
+        }, sch);
+      }, toScheduleFormat(stopTime));
+    }
+  } catch {}
 };
 
 /**
@@ -97,7 +102,10 @@ export const deploy = async (fixture: any, index: number) => {
 
       const stopTime = new Date(startTime.getTime() + minutesToMilliSeconds(105));
 
-      const sch = later.parse.recur.every(2).minute();
+      const sch = later.parse
+        .recur()
+        .every(2)
+        .minute();
 
       later.setTimeout(() => {
         const t = later.setInterval(() => {
@@ -109,9 +117,9 @@ export const deploy = async (fixture: any, index: number) => {
           });
         }, sch);
       }, toScheduleFormat(stopTime));
-    } catch (e) {
-      console.log(`Deploying contract was cancelled due to error: ${e} +\n`);
-    }
+
+      console.log(`Match started: ${fixture.fid}`);
+    } catch {}
   }
 };
 
